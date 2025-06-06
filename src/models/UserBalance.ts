@@ -4,6 +4,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IUserBalance extends Document {
   userId: string;
   balance: number;
+  bankBalance: number;
   lastUpdated: Date;
 }
 
@@ -11,6 +12,7 @@ export interface IUserBalance extends Document {
 const UserBalanceSchema = new Schema<IUserBalance>({
   userId: { type: String, required: true, unique: true },
   balance: { type: Number, default: 0 },
+  bankBalance: { type: Number, default: 0 },
   lastUpdated: { type: Date, default: Date.now }
 });
 

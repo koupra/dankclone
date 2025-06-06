@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import config from './config/config';
 import { connectToDatabase } from './utils/database';
 import { registerReadyEvent } from './events/ready';
+import { registerButtonInteractionEvent } from './events/buttonInteraction';
 import { loadCommands, setupMessageHandler, setupInteractionHandler } from './handlers/commandHandler';
 
 // Create Discord client
@@ -15,6 +16,7 @@ const client = new Client({
 
 // Register events
 registerReadyEvent(client);
+registerButtonInteractionEvent(client);
 
 // Setup command handlers
 setupMessageHandler(client);

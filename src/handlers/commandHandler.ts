@@ -32,6 +32,7 @@ export async function loadCommands(client: Client): Promise<void> {
         commands.push({
           name: command.name,
           description: command.description,
+          options: command.options || []
         });
         console.log(`Loaded slash command: ${command.name}`);
       } else {
