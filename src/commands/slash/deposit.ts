@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder, ApplicationCommandOptionType } from 'discord.js';
 import { SlashCommand } from '../../interfaces/Command';
 import { BalanceService } from '../../services/BalanceService';
+import config from '../../config/config';
 
 export const command: SlashCommand = {
   name: 'deposit',
@@ -39,6 +40,17 @@ export const command: SlashCommand = {
         const errorEmbed = new EmbedBuilder()
           .setColor('#ff0000')
           .setDescription(`❌ You don't have that much money in your wallet! Your wallet balance is ⏣ ${balanceInfo.balance.toLocaleString()}.`);
+        
+        await interaction.editReply({ embeds: [errorEmbed] });
+        return;
+      }
+      
+      // Check if deposit would exceed max bank balance
+      if (balanceInfo.bankBalance + amount > config.economy.maxBankBalance) {
+        const spaceLeft = config.economy.maxBankBalance - balanceInfo.bankBalance;
+        const errorEmbed = new EmbedBuilder()
+          .setColor('#ff0000')
+          .setDescription(`❌ This deposit would exceed your bank's capacity! You can only deposit ⏣ ${spaceLeft.toLocaleString()} more.`);
         
         await interaction.editReply({ embeds: [errorEmbed] });
         return;

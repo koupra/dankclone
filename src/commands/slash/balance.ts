@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder, ApplicationCommandOptionType, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { SlashCommand } from '../../interfaces/Command';
 import { BalanceService } from '../../services/BalanceService';
+import config from '../../config/config';
 
 export const command: SlashCommand = {
   name: 'balance',
@@ -29,7 +30,7 @@ export const command: SlashCommand = {
       // Format numbers with commas
       const formattedBalance = balanceInfo.balance.toLocaleString();
       const formattedBankBalance = balanceInfo.bankBalance.toLocaleString();
-      const maxBankBalance = (17373077).toLocaleString(); // Example max bank balance
+      const maxBankBalance = config.economy.maxBankBalance.toLocaleString();
       
       // Create embed
       const embed = new EmbedBuilder()

@@ -12,5 +12,8 @@ export default {
   mongodb: {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/discord_bot',
   },
+  economy: {
+    maxBankBalance: 100000,
+  },
   // Add more configuration options as needed
 }; 

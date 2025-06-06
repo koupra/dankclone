@@ -1,6 +1,7 @@
 import { Client, Message, EmbedBuilder } from 'discord.js';
 import { PrefixCommand } from '../../interfaces/Command';
 import { BalanceService } from '../../services/BalanceService';
+import config from '../../config/config';
 
 export const command: PrefixCommand = {
   name: 'deposit',
@@ -20,14 +21,17 @@ export const command: PrefixCommand = {
         return;
       }
       
+      // Get current balance
+      const balanceInfo = await BalanceService.getUserBalance(userId);
+      
       // Parse amount
       const amountStr = args[0].replace(/,/g, '');
       let amount: number;
       
       if (amountStr.toLowerCase() === 'all') {
-        // Get all money from wallet
-        const balanceInfo = await BalanceService.getUserBalance(userId);
-        amount = balanceInfo.balance;
+        // Get all money from wallet, but respect max bank capacity
+        const spaceLeft = config.economy.maxBankBalance - balanceInfo.bankBalance;
+        amount = Math.min(balanceInfo.balance, spaceLeft);
       } else {
         amount = parseInt(amountStr);
       }
@@ -42,14 +46,22 @@ export const command: PrefixCommand = {
         return;
       }
       
-      // Get current balance
-      const balanceInfo = await BalanceService.getUserBalance(userId);
-      
       // Check if user has enough in wallet
       if (amount > balanceInfo.balance) {
         const errorEmbed = new EmbedBuilder()
           .setColor('#ff0000')
           .setDescription(`❌ You don't have that much money in your wallet! Your wallet balance is ⏣ ${balanceInfo.balance.toLocaleString()}.`);
+        
+        await message.reply({ embeds: [errorEmbed] });
+        return;
+      }
+      
+      // Check if deposit would exceed max bank balance
+      if (balanceInfo.bankBalance + amount > config.economy.maxBankBalance) {
+        const spaceLeft = config.economy.maxBankBalance - balanceInfo.bankBalance;
+        const errorEmbed = new EmbedBuilder()
+          .setColor('#ff0000')
+          .setDescription(`❌ This deposit would exceed your bank's capacity! You can only deposit ⏣ ${spaceLeft.toLocaleString()} more.`);
         
         await message.reply({ embeds: [errorEmbed] });
         return;

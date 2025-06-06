@@ -1,4 +1,5 @@
 import UserBalance from '../models/UserBalance';
+import config from '../config/config';
 
 export interface UserBalanceInfo {
   balance: number;
@@ -47,7 +48,7 @@ export class BalanceService {
   }
   
   /**
-   * Add money to a user's wallet
+   * Add money to a user's balance
    * @param userId The Discord user ID
    * @param amount The amount to add
    * @returns The updated balance
@@ -72,6 +73,19 @@ export class BalanceService {
    * @returns The updated bank balance
    */
   public static async addBankBalance(userId: string, amount: number): Promise<number> {
+    // Get current bank balance
+    const userBalance = await UserBalance.findOne({ userId });
+    
+    // If adding money, enforce max bank balance
+    if (amount > 0 && userBalance) {
+      const newBankBalance = userBalance.bankBalance + amount;
+      
+      // Cap at max bank balance
+      if (newBankBalance > config.economy.maxBankBalance) {
+        amount = config.economy.maxBankBalance - userBalance.bankBalance;
+      }
+    }
+    
     const result = await UserBalance.findOneAndUpdate(
       { userId },
       { 
