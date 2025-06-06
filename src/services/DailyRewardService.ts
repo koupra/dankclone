@@ -18,6 +18,8 @@ export class DailyRewardService {
   private static DAY_MS = 24 * 60 * 60 * 1000;
   // 48 hours in milliseconds (for streak reset)
   private static TWO_DAYS_MS = 2 * DailyRewardService.DAY_MS;
+  // Owner user ID that bypasses cooldowns
+  private static OWNER_ID = "807822793327509544";
 
   /**
    * Claim daily reward for a user
@@ -36,8 +38,8 @@ export class DailyRewardService {
     const lastClaimed = dailyReward.lastClaimed;
     const timeSinceLastClaim = now.getTime() - lastClaimed.getTime();
     
-    // Check if 24 hours have passed since last claim
-    if (timeSinceLastClaim < DailyRewardService.DAY_MS) {
+    // Check if 24 hours have passed since last claim (skip for owner)
+    if (timeSinceLastClaim < DailyRewardService.DAY_MS && userId !== DailyRewardService.OWNER_ID) {
       const timeRemaining = DailyRewardService.DAY_MS - timeSinceLastClaim;
       const hoursRemaining = Math.floor(timeRemaining / (60 * 60 * 1000));
       const minutesRemaining = Math.floor((timeRemaining % (60 * 60 * 1000)) / (60 * 1000));
@@ -46,7 +48,8 @@ export class DailyRewardService {
     }
     
     // Check if streak should be reset (more than 48 hours since last claim)
-    const isNewStreak = timeSinceLastClaim >= DailyRewardService.TWO_DAYS_MS;
+    // Skip for owner - always maintain streak
+    const isNewStreak = userId !== DailyRewardService.OWNER_ID && timeSinceLastClaim >= DailyRewardService.TWO_DAYS_MS;
     
     // Update streak
     if (isNewStreak) {

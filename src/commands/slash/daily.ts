@@ -17,11 +17,17 @@ export const command: SlashCommand = {
       // Claim daily reward
       const result = await DailyRewardService.claimDailyReward(userId);
       
+      // Calculate next daily time (24 hours from now)
+      const nextDaily = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const unixTimestamp = Math.floor(nextDaily.getTime() / 1000); // Convert to UNIX seconds
+
       // Create embed
       const embed = new EmbedBuilder()
         .setTitle(`${interaction.user.username}'s Daily Coins`)
-        .setDescription(`⏣ ${result.total.toLocaleString()} was placed in your wallet!`)
+        .setColor('#313136')
+        .setDescription(`> ⏣ ${result.total.toLocaleString()} was placed in your wallet!`)
         .addFields(
+          // Top row
           { 
             name: 'Base', 
             value: `⏣ ${result.amount.toLocaleString()}`,
@@ -33,13 +39,24 @@ export const command: SlashCommand = {
             inline: true 
           },
           {
+            name: '\u200b',
+            value: '\u200b',
+            inline: true
+          },
+          // Bottom row
+          {
             name: 'Next Daily',
-            value: 'in 24 hours',
+            value: `<t:${unixTimestamp}:R>`, // This will show "in 24 hours" and update in real time
             inline: true
           },
           {
             name: 'Streak',
             value: `${result.streak}`,
+            inline: true
+          },
+          {
+            name: '\u200b',
+            value: '\u200b',
             inline: true
           }
         );
@@ -69,17 +86,29 @@ export const command: SlashCommand = {
           }
           
           // Create the error embed that matches the image
+          const errorEmbed = new EmbedBuilder()
+            .setDescription(`You already got your daily today! Try again ${timeRemaining}`);
+          
           await interaction.editReply({
-            content: `You already got your daily today! Try again ${timeRemaining}`
+            content: '',
+            embeds: [errorEmbed]
           });
         } else {
+          const errorEmbed = new EmbedBuilder()
+            .setDescription(`❌ ${errorMessage}`);
+          
           await interaction.editReply({
-            content: `❌ ${errorMessage}`
+            content: '',
+            embeds: [errorEmbed]
           });
         }
       } else {
+        const errorEmbed = new EmbedBuilder()
+          .setDescription('❌ An error occurred while claiming your daily reward.');
+        
         await interaction.editReply({
-          content: '❌ An error occurred while claiming your daily reward.'
+          content: '',
+          embeds: [errorEmbed]
         });
       }
     }
