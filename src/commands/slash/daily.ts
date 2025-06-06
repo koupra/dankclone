@@ -50,9 +50,33 @@ export const command: SlashCommand = {
     } catch (error) {
       // Handle errors (like already claimed today)
       if (error instanceof Error) {
-        await interaction.editReply({
-          content: `❌ ${error.message}`
-        });
+        const errorMessage = error.message;
+        
+        // Check if it's the "already claimed" error
+        if (errorMessage.includes("You can claim your next daily reward in")) {
+          // Extract hours and minutes from error message
+          const timeMatch = errorMessage.match(/(\d+)h (\d+)m/);
+          let timeRemaining = "in 24 hours";
+          
+          if (timeMatch && timeMatch.length >= 3) {
+            const hours = parseInt(timeMatch[1]);
+            const minutes = parseInt(timeMatch[2]);
+            timeRemaining = `in ${hours} hours`;
+            
+            if (hours === 0) {
+              timeRemaining = `in ${minutes} minutes`;
+            }
+          }
+          
+          // Create the error embed that matches the image
+          await interaction.editReply({
+            content: `You already got your daily today! Try again ${timeRemaining}`
+          });
+        } else {
+          await interaction.editReply({
+            content: `❌ ${errorMessage}`
+          });
+        }
       } else {
         await interaction.editReply({
           content: '❌ An error occurred while claiming your daily reward.'

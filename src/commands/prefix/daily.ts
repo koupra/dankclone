@@ -55,10 +55,35 @@ export const command: PrefixCommand = {
     } catch (error) {
       // Handle errors (like already claimed today)
       if (error instanceof Error) {
-        await loadingMessage.edit({
-          content: `❌ ${error.message}`,
-          embeds: []
-        });
+        const errorMessage = error.message;
+        
+        // Check if it's the "already claimed" error
+        if (errorMessage.includes("You can claim your next daily reward in")) {
+          // Extract hours and minutes from error message
+          const timeMatch = errorMessage.match(/(\d+)h (\d+)m/);
+          let timeRemaining = "in 24 hours";
+          
+          if (timeMatch && timeMatch.length >= 3) {
+            const hours = parseInt(timeMatch[1]);
+            const minutes = parseInt(timeMatch[2]);
+            timeRemaining = `in ${hours} hours`;
+            
+            if (hours === 0) {
+              timeRemaining = `in ${minutes} minutes`;
+            }
+          }
+          
+          // Create the error embed that matches the image
+          await loadingMessage.edit({
+            content: `You already got your daily today! Try again ${timeRemaining}`,
+            embeds: []
+          });
+        } else {
+          await loadingMessage.edit({
+            content: `❌ ${errorMessage}`,
+            embeds: []
+          });
+        }
       } else {
         await loadingMessage.edit({
           content: '❌ An error occurred while claiming your daily reward.',
