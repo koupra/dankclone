@@ -56,7 +56,7 @@ export function registerButtonInteractionEvent(client: Client): void {
     if (!interaction.isModalSubmit()) return;
     
     try {
-      const customId = interaction.customId;
+      const customId = interaction.customId.split(':')[0]; // Extract base customId without message ID
       
       if (customId === 'withdraw-modal') {
         await handleWithdrawModalSubmit(interaction);
@@ -206,12 +206,7 @@ async function handleWithdrawModalSubmit(interaction: any): Promise<void> {
     // Get updated balance
     const updatedBalance = await BalanceService.getUserBalance(userId);
     
-    // Send success message
-    await interaction.editReply({
-      content: `✅ Successfully withdrew ⏣ ${amount.toLocaleString()} from your bank.`
-    });
-    
-    // Update the original balance message if possible
+    // Update the original balance message
     try {
       // Extract the message ID from the modal's custom ID
       const customIdParts = interaction.customId.split(':');
@@ -238,11 +233,27 @@ async function handleWithdrawModalSubmit(interaction: any): Promise<void> {
           
           // Update the message with the new embed
           await originalMessage.edit({ embeds: [updatedEmbed] });
+          
+          // Delete the interaction reply
+          await interaction.deleteReply();
+        } else {
+          // If we can't find the original message or embed, send a minimal confirmation
+          await interaction.editReply({
+            content: `Transaction completed.`
+          });
         }
+      } else {
+        // If we can't extract the message ID, send a minimal confirmation
+        await interaction.editReply({
+          content: `Transaction completed.`
+        });
       }
     } catch (updateError) {
       console.error('Error updating original balance message:', updateError);
-      // We don't need to notify the user about this error, as the transaction was successful
+      // Send a minimal confirmation if updating the original message fails
+      await interaction.editReply({
+        content: `Transaction completed.`
+      });
     }
     
   } catch (error) {
@@ -291,12 +302,7 @@ async function handleDepositModalSubmit(interaction: any): Promise<void> {
     // Get updated balance
     const updatedBalance = await BalanceService.getUserBalance(userId);
     
-    // Send success message
-    await interaction.editReply({
-      content: `✅ Successfully deposited ⏣ ${amount.toLocaleString()} to your bank.`
-    });
-    
-    // Update the original balance message if possible
+    // Update the original balance message
     try {
       // Extract the message ID from the modal's custom ID
       const customIdParts = interaction.customId.split(':');
@@ -323,11 +329,27 @@ async function handleDepositModalSubmit(interaction: any): Promise<void> {
           
           // Update the message with the new embed
           await originalMessage.edit({ embeds: [updatedEmbed] });
+          
+          // Delete the interaction reply
+          await interaction.deleteReply();
+        } else {
+          // If we can't find the original message or embed, send a minimal confirmation
+          await interaction.editReply({
+            content: `Transaction completed.`
+          });
         }
+      } else {
+        // If we can't extract the message ID, send a minimal confirmation
+        await interaction.editReply({
+          content: `Transaction completed.`
+        });
       }
     } catch (updateError) {
       console.error('Error updating original balance message:', updateError);
-      // We don't need to notify the user about this error, as the transaction was successful
+      // Send a minimal confirmation if updating the original message fails
+      await interaction.editReply({
+        content: `Transaction completed.`
+      });
     }
     
   } catch (error) {

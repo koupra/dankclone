@@ -42,21 +42,23 @@ export const command: SlashCommand = {
           `Global Rank: #${balanceInfo.globalRank?.toLocaleString() || '???'}`
         );
       
-      // Create buttons for withdraw/deposit
-      const row = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId('withdraw')
-            .setLabel('Withdraw')
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId('deposit')
-            .setLabel('Deposit')
-            .setStyle(ButtonStyle.Secondary)
-        );
-      
       // Only show buttons if checking own balance
       if (targetUser.id === interaction.user.id) {
+        // Create buttons for withdraw/deposit
+        const row = new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(
+            new ButtonBuilder()
+              .setCustomId('withdraw')
+              .setLabel('Withdraw')
+              .setStyle(ButtonStyle.Secondary)
+              .setDisabled(balanceInfo.bankBalance <= 0), // Disable if no bank balance
+            new ButtonBuilder()
+              .setCustomId('deposit')
+              .setLabel('Deposit')
+              .setStyle(ButtonStyle.Secondary)
+              .setDisabled(balanceInfo.balance <= 0) // Disable if no wallet balance
+          );
+        
         await interaction.editReply({ 
           embeds: [embed],
           components: [row]
