@@ -11,11 +11,9 @@ export interface DailyRewardResult {
 
 export class DailyRewardService {
   // Base reward amount
-  private static BASE_REWARD = 5000;
-  // Maximum random bonus
-  private static MAX_RANDOM_BONUS = 5000;
-  // Streak bonus percentage per day (10%)
-  private static STREAK_BONUS_PERCENT = 0.1;
+  private static BASE_REWARD = 100000;
+  // Streak bonus per day
+  private static STREAK_BONUS_PER_DAY = 1000;
   // 24 hours in milliseconds
   private static DAY_MS = 24 * 60 * 60 * 1000;
   // 48 hours in milliseconds (for streak reset)
@@ -58,12 +56,10 @@ export class DailyRewardService {
     }
     
     // Calculate reward
-    const baseReward = DailyRewardService.BASE_REWARD;
-    const randomBonus = Math.floor(Math.random() * DailyRewardService.MAX_RANDOM_BONUS);
-    const amount = baseReward + randomBonus;
+    const amount = DailyRewardService.BASE_REWARD;
     
-    // Calculate streak bonus
-    const streakBonus = Math.floor(amount * (dailyReward.streak * DailyRewardService.STREAK_BONUS_PERCENT));
+    // Calculate streak bonus (1000 per streak day)
+    const streakBonus = dailyReward.streak * DailyRewardService.STREAK_BONUS_PER_DAY;
     
     // Calculate total
     const total = amount + streakBonus;

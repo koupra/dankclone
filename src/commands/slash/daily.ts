@@ -19,14 +19,30 @@ export const command: SlashCommand = {
       
       // Create embed
       const embed = new EmbedBuilder()
-        .setTitle('Daily Rewards')
-        .setDescription(`You received **⏣ ${result.amount.toLocaleString()}** as your daily reward.`)
+        .setTitle(`${interaction.user.username}'s Daily Coins`)
+        .setDescription(`⏣ ${result.total.toLocaleString()} was placed in your wallet!`)
         .addFields(
-          { name: 'Streak', value: `${result.streak} days (+⏣ ${result.streakBonus.toLocaleString()})`, inline: true },
-          { name: 'Total', value: `⏣ ${result.total.toLocaleString()}`, inline: true }
-        )
-        .setFooter({ text: `Come back tomorrow to claim your next daily reward!` })
-        .setTimestamp();
+          { 
+            name: 'Base', 
+            value: `⏣ ${result.amount.toLocaleString()}`,
+            inline: true 
+          },
+          { 
+            name: 'Streak Bonus', 
+            value: `⏣ ${result.streakBonus.toLocaleString()}`,
+            inline: true 
+          },
+          {
+            name: 'Next Daily',
+            value: 'in 24 hours',
+            inline: true
+          },
+          {
+            name: 'Streak',
+            value: `${result.streak}`,
+            inline: true
+          }
+        );
       
       // Send the embed
       await interaction.editReply({ embeds: [embed] });
