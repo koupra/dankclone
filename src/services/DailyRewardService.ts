@@ -1,5 +1,6 @@
-import DailyReward, { IDailyReward } from '../models/DailyReward';
-import UserBalance from '../models/UserBalance';
+import { AppDataSource } from '../utils/data-source';
+import { DailyReward } from '../entities/DailyReward';
+import UserBalance from '../models/UserBalance'; // Mongoose model
 
 export interface DailyRewardResult {
   amount: number;
@@ -27,58 +28,56 @@ export class DailyRewardService {
    * @returns The reward result
    */
   public static async claimDailyReward(userId: string): Promise<DailyRewardResult> {
-    // Get or create user's daily reward record
-    let dailyReward = await DailyReward.findOne({ userId });
-    
+    const dailyRepo = AppDataSource.getRepository(DailyReward);
+
+    let dailyReward = await dailyRepo.findOneBy({ userId });
     if (!dailyReward) {
-      dailyReward = new DailyReward({ userId });
+      dailyReward = dailyRepo.create({ userId, lastClaimed: new Date(0), streak: 0, totalClaimed: 0 });
+      await dailyRepo.save(dailyReward);
     }
-    
+
     const now = new Date();
     const lastClaimed = dailyReward.lastClaimed;
     const timeSinceLastClaim = now.getTime() - lastClaimed.getTime();
-    
+
     // Check if 24 hours have passed since last claim (skip for owner)
     if (timeSinceLastClaim < DailyRewardService.DAY_MS && userId !== DailyRewardService.OWNER_ID) {
       const timeRemaining = DailyRewardService.DAY_MS - timeSinceLastClaim;
       const hoursRemaining = Math.floor(timeRemaining / (60 * 60 * 1000));
       const minutesRemaining = Math.floor((timeRemaining % (60 * 60 * 1000)) / (60 * 1000));
-      
       throw new Error(`You can claim your next daily reward in ${hoursRemaining}h ${minutesRemaining}m`);
     }
-    
+
     // Check if streak should be reset (more than 48 hours since last claim)
     // Skip for owner - always maintain streak
     const isNewStreak = userId !== DailyRewardService.OWNER_ID && timeSinceLastClaim >= DailyRewardService.TWO_DAYS_MS;
-    
+
     // Update streak
     if (isNewStreak) {
       dailyReward.streak = 1;
     } else {
       dailyReward.streak += 1;
     }
-    
+
     // Calculate reward
     const amount = DailyRewardService.BASE_REWARD;
-    
     // Calculate streak bonus (1000 per streak day)
     const streakBonus = dailyReward.streak * DailyRewardService.STREAK_BONUS_PER_DAY;
-    
     // Calculate total
     const total = amount + streakBonus;
-    
-    // Update user's record
+
+    // Update cooldown and streak info in PostgreSQL
     dailyReward.lastClaimed = now;
     dailyReward.totalClaimed += total;
-    await dailyReward.save();
-    
-    // Update user's balance
+    await dailyRepo.save(dailyReward);
+
+    // Update user's balance in MongoDB
     await UserBalance.findOneAndUpdate(
       { userId },
       { $inc: { balance: total }, $set: { lastUpdated: now } },
       { upsert: true }
     );
-    
+
     // Return result
     return {
       amount,

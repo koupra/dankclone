@@ -4,6 +4,8 @@ import { connectToDatabase } from './utils/database';
 import { registerReadyEvent } from './events/ready';
 import { registerButtonInteractionEvent } from './events/buttonInteraction';
 import { loadCommands, setupMessageHandler, setupInteractionHandler } from './handlers/commandHandler';
+import { AppDataSource } from './utils/data-source';
+import mongoose from 'mongoose';
 
 // Create Discord client
 const client = new Client({
@@ -21,6 +23,25 @@ registerButtonInteractionEvent(client);
 // Setup command handlers
 setupMessageHandler(client);
 setupInteractionHandler(client);
+
+// Initialize PostgreSQL (TypeORM)
+AppDataSource.initialize()
+  .then(() => {
+    console.log('TypeORM (PostgreSQL) Data Source has been initialized!');
+  })
+  .catch((err) => {
+    console.error('Error during TypeORM Data Source initialization:', err);
+  });
+
+// Initialize MongoDB (Mongoose)
+const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/rewardsdb';
+mongoose.connect(mongoUri)
+  .then(() => {
+    console.log('Mongoose (MongoDB) connection established!');
+  })
+  .catch((err) => {
+    console.error('Error connecting to MongoDB:', err);
+  });
 
 // Start the bot
 async function main() {

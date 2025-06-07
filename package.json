@@ -7,14 +7,22 @@
     "build": "tsc",
     "start": "node dist/index.js"
   },
-  "keywords": ["discord", "bot", "typescript", "mongodb"],
+  "keywords": [
+    "discord",
+    "bot",
+    "typescript",
+    "mongodb"
+  ],
   "author": "",
   "license": "ISC",
   "description": "Discord bot using TypeScript with MongoDB integration",
   "dependencies": {
     "discord.js": "^14.19.3",
     "dotenv": "^16.5.0",
-    "mongoose": "^8.15.1"
+    "mongoose": "^8.15.1",
+    "pg": "^8.16.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.24"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

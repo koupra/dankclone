@@ -1,9 +1,11 @@
-import WeeklyReward, { IWeeklyReward } from '../models/WeeklyReward';
-import UserBalance from '../models/UserBalance';
+import { AppDataSource } from '../utils/data-source';
+import { WeeklyReward } from '../entities/WeeklyReward';
+import UserBalance from '../models/UserBalance'; // Mongoose model
 
 export interface WeeklyRewardResult {
   amount: number;
   total: number;
+  lastClaimed: Date;
 }
 
 export class WeeklyRewardService {
@@ -20,10 +22,12 @@ export class WeeklyRewardService {
    * @returns The reward result
    */
   public static async claimWeeklyReward(userId: string): Promise<WeeklyRewardResult> {
-    // Get or create user's weekly reward record
-    let weeklyReward = await WeeklyReward.findOne({ userId });
+    const weeklyRepo = AppDataSource.getRepository(WeeklyReward);
+
+    let weeklyReward = await weeklyRepo.findOneBy({ userId });
     if (!weeklyReward) {
-      weeklyReward = new WeeklyReward({ userId });
+      weeklyReward = weeklyRepo.create({ userId, lastClaimed: new Date(0), totalClaimed: 0 });
+      await weeklyRepo.save(weeklyReward);
     }
 
     const now = new Date();
@@ -42,12 +46,12 @@ export class WeeklyRewardService {
     const amount = WeeklyRewardService.BASE_REWARD;
     const total = amount;
 
-    // Update user's record
+    // Update cooldown info in PostgreSQL
     weeklyReward.lastClaimed = now;
     weeklyReward.totalClaimed += total;
-    await weeklyReward.save();
+    await weeklyRepo.save(weeklyReward);
 
-    // Update user's balance
+    // Update user's balance in MongoDB
     await UserBalance.findOneAndUpdate(
       { userId },
       { $inc: { balance: total }, $set: { lastUpdated: now } },
@@ -57,7 +61,8 @@ export class WeeklyRewardService {
     // Return result
     return {
       amount,
-      total
+      total,
+      lastClaimed: weeklyReward.lastClaimed
     };
   }
 } 
